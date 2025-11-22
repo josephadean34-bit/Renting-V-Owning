@@ -152,6 +152,7 @@ function runProjection(values) {
       equity,
       ownerCash: ownerCashOut,
       ownerCarryCosts: carryCostCumulative,
+      savingsContribution,
       renterSavings,
       ownerNetCost,
       rentPaid: rentCumulative,
@@ -238,6 +239,7 @@ function renderTable(results) {
         <th>Equity</th>
         <th>Owner cash paid</th>
         <th>Cumulative ownership costs</th>
+        <th>Savings contribution</th>
         <th>Renter savings</th>
         <th>Owner net cost</th>
         <th>Rent paid</th>
@@ -256,6 +258,7 @@ function renderTable(results) {
           <td>${currency.format(row.equity)}</td>
           <td>${currency.format(row.ownerCash)}</td>
           <td>${currency.format(row.ownerCarryCosts)}</td>
+          <td>${currency.format(row.savingsContribution)}</td>
           <td>${currency.format(row.renterSavings)}</td>
           <td>${currency.format(row.ownerNetCost)}</td>
           <td>${currency.format(row.rentPaid)}</td>
