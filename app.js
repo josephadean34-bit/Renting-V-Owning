@@ -12,13 +12,20 @@ let comparisonChart = null;
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
+  updateOutputs();
+});
+
+// Run a first calculation so the page is populated immediately.
+updateOutputs();
+
+function updateOutputs() {
   const data = new FormData(form);
   const values = parseValues(data);
   const results = runProjection(values);
   renderSummary(results, values.analysisYears);
   renderTable(results);
   renderChart(results);
-});
+}
 
 function parseValues(data) {
   const getNumber = (name, fallback = 0) => {
