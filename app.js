@@ -190,7 +190,7 @@ function renderSummary(results, analysisYears) {
         <h3>Rent paid</h3>
         <p>${currency.format(final.rentPaid)}</p>
       </article>
-      <article class="summary-card" style="border-color:${owningAhead ? '#22c55e' : '#ef4444'}">
+      <article class="summary-card trend-card ${owningAhead ? 'trend-positive' : 'trend-negative'}">
         <h3>Owning vs Renting</h3>
         <p>${owningAhead ? '+' : '-'}${currency.format(Math.abs(diff))}</p>
       </article>

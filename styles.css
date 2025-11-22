@@ -120,6 +120,26 @@ input[type='number'] {
   font-weight: 600;
 }
 
+.summary-card.trend-card {
+  border-width: 2px;
+}
+
+.trend-card.trend-positive {
+  border-color: #22c55e;
+}
+
+.trend-card.trend-negative {
+  border-color: #ef4444;
+}
+
+.trend-card.trend-positive p {
+  color: #15803d;
+}
+
+.trend-card.trend-negative p {
+  color: #b91c1c;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
