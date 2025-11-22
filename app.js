@@ -93,6 +93,7 @@ function runProjection(values) {
 
   let balance = loanAmount;
   let ownerCashOut = downPayment + closingCosts;
+  let carryCostCumulative = 0;
   let rentCumulative = 0;
   let monthsElapsed = 0;
   const rows = [];
@@ -125,8 +126,10 @@ function runProjection(values) {
     const propertyTax = homeValue * propertyTaxRate;
     const maintenance = homeValue * maintenanceRate;
     const hoaAnnual = hoaMonthly * 12;
-    const ownershipCost = yearMortgagePayment + propertyTax + maintenance + hoaAnnual + insuranceAnnual;
+    const ownershipCarryCost = propertyTax + maintenance + hoaAnnual + insuranceAnnual;
+    const ownershipCost = yearMortgagePayment + ownershipCarryCost;
     ownerCashOut += ownershipCost;
+    carryCostCumulative += ownershipCarryCost;
 
     const equity = Math.max(homeValue - balance, 0);
     const ownerNetCost = ownerCashOut - equity;
@@ -141,6 +144,7 @@ function runProjection(values) {
       balance,
       equity,
       ownerCash: ownerCashOut,
+      ownerCarryCosts: carryCostCumulative,
       ownerNetCost,
       rentPaid: rentCumulative,
       rentVsOwn
@@ -221,6 +225,7 @@ function renderTable(results) {
         <th>Mortgage balance</th>
         <th>Equity</th>
         <th>Owner cash paid</th>
+        <th>Cumulative ownership costs</th>
         <th>Owner net cost</th>
         <th>Rent paid</th>
         <th>Rent vs Own</th>
@@ -237,6 +242,7 @@ function renderTable(results) {
           <td>${currency.format(row.balance)}</td>
           <td>${currency.format(row.equity)}</td>
           <td>${currency.format(row.ownerCash)}</td>
+          <td>${currency.format(row.ownerCarryCosts)}</td>
           <td>${currency.format(row.ownerNetCost)}</td>
           <td>${currency.format(row.rentPaid)}</td>
           <td class="${row.rentVsOwn >= 0 ? 'positive' : 'negative'}">${row.rentVsOwn >= 0 ? '+' : '-'}${currency.format(Math.abs(row.rentVsOwn))}</td>
@@ -253,7 +259,7 @@ function renderTable(results) {
       </table>
     </div>
   `;
-  }
+}
 
 function renderChart(results) {
   if (!chartCanvas || !hasWindow || !window.Chart) {
