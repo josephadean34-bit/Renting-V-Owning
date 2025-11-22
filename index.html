@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Renting vs Owning Cost Comparison</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>Homeownership vs Renting</h1>
+        <p>
+          Explore long-term equity and cash-flow differences between buying a
+          home and renting. Adjust the assumptions below and see how the net
+          cost changes over time.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="inputs">
+          <div class="input-grid">
+            <fieldset>
+              <legend>Home Purchase</legend>
+              <label>
+                Home price
+                <input type="number" name="homePrice" min="0" step="1000" value="450000" required />
+              </label>
+              <label>
+                Down payment %
+                <input type="number" name="downPercent" min="0" max="100" step="0.1" value="20" required />
+              </label>
+              <label>
+                Closing costs %
+                <input type="number" name="closingCostPercent" min="0" max="10" step="0.1" value="2.5" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Mortgage</legend>
+              <label>
+                Loan term (years)
+                <input type="number" name="loanTermYears" min="1" max="40" step="1" value="30" required />
+              </label>
+              <label>
+                Interest rate %
+                <input type="number" name="interestRate" min="0" max="20" step="0.01" value="6.5" required />
+              </label>
+              <label>
+                Analysis horizon (years)
+                <input type="number" name="analysisYears" min="1" max="40" step="1" value="10" required />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Ownership Costs</legend>
+              <label>
+                Property tax rate %
+                <input type="number" name="propertyTaxRate" min="0" max="10" step="0.05" value="1.2" />
+              </label>
+              <label>
+                Annual insurance ($)
+                <input type="number" name="insuranceAnnual" min="0" step="100" value="1800" />
+              </label>
+              <label>
+                Maintenance % of value
+                <input type="number" name="maintenanceRate" min="0" max="10" step="0.1" value="1" />
+              </label>
+              <label>
+                HOA / other monthly ($)
+                <input type="number" name="hoaMonthly" min="0" step="25" value="0" />
+              </label>
+              <label>
+                Appreciation rate %
+                <input type="number" name="appreciationRate" min="-10" max="15" step="0.1" value="3" />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Renting</legend>
+              <label>
+                Monthly rent ($)
+                <input type="number" name="monthlyRent" min="0" step="50" value="2200" required />
+              </label>
+              <label>
+                Rent increase per year %
+                <input type="number" name="rentGrowthRate" min="0" max="15" step="0.1" value="3" />
+              </label>
+            </fieldset>
+          </div>
+          <button type="submit">Compare</button>
+        </form>
+      </section>
+
+      <section class="results card">
+        <div id="summary" aria-live="polite">
+          <p>Enter your assumptions and press compare to see the results.</p>
+        </div>
+        <div id="table-container"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
