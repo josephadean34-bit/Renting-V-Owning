@@ -4,21 +4,29 @@ const currency = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0
 });
 
-const form = document.getElementById('inputs');
-const summaryEl = document.getElementById('summary');
-const tableContainer = document.getElementById('table-container');
-const chartCanvas = document.getElementById('comparison-chart');
+const hasDocument = typeof document !== 'undefined';
+const hasWindow = typeof window !== 'undefined';
+const form = hasDocument ? document.getElementById('inputs') : null;
+const summaryEl = hasDocument ? document.getElementById('summary') : null;
+const tableContainer = hasDocument ? document.getElementById('table-container') : null;
+const chartCanvas = hasDocument ? document.getElementById('comparison-chart') : null;
 let comparisonChart = null;
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  updateOutputs();
-});
+if (form) {
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    updateOutputs();
+  });
 
-// Run a first calculation so the page is populated immediately.
-updateOutputs();
+  // Run a first calculation so the page is populated immediately.
+  updateOutputs();
+}
 
 function updateOutputs() {
+  if (!form) {
+    return;
+  }
+
   const data = new FormData(form);
   const values = parseValues(data);
   const results = runProjection(values);
@@ -148,6 +156,10 @@ function runProjection(values) {
 }
 
 function renderSummary(results, analysisYears) {
+  if (!summaryEl) {
+    return;
+  }
+
   if (!results.rows.length) {
     summaryEl.innerHTML = '<p>No projection available.</p>';
     return;
@@ -188,6 +200,10 @@ function renderSummary(results, analysisYears) {
 }
 
 function renderTable(results) {
+  if (!tableContainer) {
+    return;
+  }
+
   if (!results.rows.length) {
     tableContainer.innerHTML = '';
     if (comparisonChart) {
@@ -240,7 +256,7 @@ function renderTable(results) {
   }
 
 function renderChart(results) {
-  if (!chartCanvas || !window.Chart) {
+  if (!chartCanvas || !hasWindow || !window.Chart) {
     return;
   }
 
@@ -260,7 +276,7 @@ function renderChart(results) {
     comparisonChart.destroy();
   }
 
-  comparisonChart = new Chart(chartCanvas.getContext('2d'), {
+  comparisonChart = new window.Chart(chartCanvas.getContext('2d'), {
     type: 'line',
     data: {
       labels,
@@ -314,4 +330,8 @@ function renderChart(results) {
       }
     }
   });
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { runProjection };
 }
