@@ -109,10 +109,14 @@
         <div id="summary" aria-live="polite">
           <p>Enter your assumptions and press compare to see the results.</p>
         </div>
+        <div class="chart-wrapper">
+          <canvas id="comparison-chart" aria-label="Rent spending vs home equity chart"></canvas>
+        </div>
         <div id="table-container"></div>
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

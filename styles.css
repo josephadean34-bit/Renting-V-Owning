@@ -150,6 +150,18 @@ th:first-child {
   overflow: auto;
 }
 
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  margin-bottom: 1.5rem;
+}
+
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .positive {
   color: #16a34a;
   font-weight: 600;

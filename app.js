@@ -7,6 +7,8 @@ const currency = new Intl.NumberFormat('en-US', {
 const form = document.getElementById('inputs');
 const summaryEl = document.getElementById('summary');
 const tableContainer = document.getElementById('table-container');
+const chartCanvas = document.getElementById('comparison-chart');
+let comparisonChart = null;
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -15,6 +17,7 @@ form.addEventListener('submit', (event) => {
   const results = runProjection(values);
   renderSummary(results, values.analysisYears);
   renderTable(results);
+  renderChart(results);
 });
 
 function parseValues(data) {
@@ -180,6 +183,10 @@ function renderSummary(results, analysisYears) {
 function renderTable(results) {
   if (!results.rows.length) {
     tableContainer.innerHTML = '';
+    if (comparisonChart) {
+      comparisonChart.destroy();
+      comparisonChart = null;
+    }
     return;
   }
 
@@ -223,4 +230,81 @@ function renderTable(results) {
       </table>
     </div>
   `;
+  }
+
+function renderChart(results) {
+  if (!chartCanvas || !window.Chart) {
+    return;
+  }
+
+  if (!results.rows.length) {
+    if (comparisonChart) {
+      comparisonChart.destroy();
+      comparisonChart = null;
+    }
+    return;
+  }
+
+  const labels = results.rows.map((row) => `Year ${row.year}`);
+  const rentSeries = results.rows.map((row) => row.rentPaid);
+  const equitySeries = results.rows.map((row) => row.equity);
+
+  if (comparisonChart) {
+    comparisonChart.destroy();
+  }
+
+  comparisonChart = new Chart(chartCanvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Rent paid (cumulative)',
+          data: rentSeries,
+          borderColor: '#94a3b8',
+          backgroundColor: 'rgba(148, 163, 184, 0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Home equity',
+          data: equitySeries,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `${context.dataset.label}: ${currency.format(context.parsed.y)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (value) => currency.format(value)
+          }
+        }
+      }
+    }
+  });
 }
