@@ -4,21 +4,29 @@ const currency = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0
 });
 
-const form = document.getElementById('inputs');
-const summaryEl = document.getElementById('summary');
-const tableContainer = document.getElementById('table-container');
-const chartCanvas = document.getElementById('comparison-chart');
+const hasDocument = typeof document !== 'undefined';
+const hasWindow = typeof window !== 'undefined';
+const form = hasDocument ? document.getElementById('inputs') : null;
+const summaryEl = hasDocument ? document.getElementById('summary') : null;
+const tableContainer = hasDocument ? document.getElementById('table-container') : null;
+const chartCanvas = hasDocument ? document.getElementById('comparison-chart') : null;
 let comparisonChart = null;
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  updateOutputs();
-});
+if (form) {
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    updateOutputs();
+  });
 
-// Run a first calculation so the page is populated immediately.
-updateOutputs();
+  // Run a first calculation so the page is populated immediately.
+  updateOutputs();
+}
 
 function updateOutputs() {
+  if (!form) {
+    return;
+  }
+
   const data = new FormData(form);
   const values = parseValues(data);
   const results = runProjection(values);
@@ -46,7 +54,8 @@ function parseValues(data) {
     hoaMonthly: getNumber('hoaMonthly', 0),
     appreciationRate: getNumber('appreciationRate', 0) / 100,
     monthlyRent: getNumber('monthlyRent', 0),
-    rentGrowthRate: getNumber('rentGrowthRate', 0) / 100
+    rentGrowthRate: getNumber('rentGrowthRate', 0) / 100,
+    renterSavingsGrowthRate: getNumber('renterSavingsGrowthRate', 0) / 100
   };
 }
 
@@ -64,7 +73,8 @@ function runProjection(values) {
     hoaMonthly,
     appreciationRate,
     monthlyRent,
-    rentGrowthRate
+    rentGrowthRate,
+    renterSavingsGrowthRate
   } = values;
 
   const downPayment = homePrice * downPercent;
@@ -85,7 +95,9 @@ function runProjection(values) {
 
   let balance = loanAmount;
   let ownerCashOut = downPayment + closingCosts;
+  let carryCostCumulative = 0;
   let rentCumulative = 0;
+  let renterSavings = 0;
   let monthsElapsed = 0;
   const rows = [];
 
@@ -117,15 +129,21 @@ function runProjection(values) {
     const propertyTax = homeValue * propertyTaxRate;
     const maintenance = homeValue * maintenanceRate;
     const hoaAnnual = hoaMonthly * 12;
-    const ownershipCost = yearMortgagePayment + propertyTax + maintenance + hoaAnnual + insuranceAnnual;
+    const ownershipCarryCost = propertyTax + maintenance + hoaAnnual + insuranceAnnual;
+    const ownershipCost = yearMortgagePayment + ownershipCarryCost;
     ownerCashOut += ownershipCost;
+    carryCostCumulative += ownershipCarryCost;
 
     const equity = Math.max(homeValue - balance, 0);
     const ownerNetCost = ownerCashOut - equity;
 
+    renterSavings *= 1 + renterSavingsGrowthRate;
     const rentThisYear = monthlyRent * 12 * Math.pow(1 + rentGrowthRate, year - 1);
     rentCumulative += rentThisYear;
-    const rentVsOwn = rentCumulative - ownerNetCost;
+    const savingsContribution = Math.max(ownershipCost - rentThisYear, 0);
+    renterSavings += savingsContribution;
+    const renterPosition = rentCumulative + renterSavings;
+    const rentVsOwn = renterPosition - ownerNetCost;
 
     rows.push({
       year,
@@ -133,6 +151,9 @@ function runProjection(values) {
       balance,
       equity,
       ownerCash: ownerCashOut,
+      ownerCarryCosts: carryCostCumulative,
+      savingsContribution,
+      renterSavings,
       ownerNetCost,
       rentPaid: rentCumulative,
       rentVsOwn
@@ -148,6 +169,10 @@ function runProjection(values) {
 }
 
 function renderSummary(results, analysisYears) {
+  if (!summaryEl) {
+    return;
+  }
+
   if (!results.rows.length) {
     summaryEl.innerHTML = '<p>No projection available.</p>';
     return;
@@ -178,7 +203,11 @@ function renderSummary(results, analysisYears) {
         <h3>Rent paid</h3>
         <p>${currency.format(final.rentPaid)}</p>
       </article>
-      <article class="summary-card" style="border-color:${owningAhead ? '#22c55e' : '#ef4444'}">
+      <article class="summary-card">
+        <h3>Renter savings</h3>
+        <p>${currency.format(final.renterSavings)}</p>
+      </article>
+      <article class="summary-card trend-card ${owningAhead ? 'trend-positive' : 'trend-negative'}">
         <h3>Owning vs Renting</h3>
         <p>${owningAhead ? '+' : '-'}${currency.format(Math.abs(diff))}</p>
       </article>
@@ -188,6 +217,10 @@ function renderSummary(results, analysisYears) {
 }
 
 function renderTable(results) {
+  if (!tableContainer) {
+    return;
+  }
+
   if (!results.rows.length) {
     tableContainer.innerHTML = '';
     if (comparisonChart) {
@@ -205,6 +238,9 @@ function renderTable(results) {
         <th>Mortgage balance</th>
         <th>Equity</th>
         <th>Owner cash paid</th>
+        <th>Cumulative ownership costs</th>
+        <th>Savings contribution</th>
+        <th>Renter savings</th>
         <th>Owner net cost</th>
         <th>Rent paid</th>
         <th>Rent vs Own</th>
@@ -221,6 +257,9 @@ function renderTable(results) {
           <td>${currency.format(row.balance)}</td>
           <td>${currency.format(row.equity)}</td>
           <td>${currency.format(row.ownerCash)}</td>
+          <td>${currency.format(row.ownerCarryCosts)}</td>
+          <td>${currency.format(row.savingsContribution)}</td>
+          <td>${currency.format(row.renterSavings)}</td>
           <td>${currency.format(row.ownerNetCost)}</td>
           <td>${currency.format(row.rentPaid)}</td>
           <td class="${row.rentVsOwn >= 0 ? 'positive' : 'negative'}">${row.rentVsOwn >= 0 ? '+' : '-'}${currency.format(Math.abs(row.rentVsOwn))}</td>
@@ -237,10 +276,10 @@ function renderTable(results) {
       </table>
     </div>
   `;
-  }
+}
 
 function renderChart(results) {
-  if (!chartCanvas || !window.Chart) {
+  if (!chartCanvas || !hasWindow || !window.Chart) {
     return;
   }
 
@@ -255,12 +294,13 @@ function renderChart(results) {
   const labels = results.rows.map((row) => `Year ${row.year}`);
   const rentSeries = results.rows.map((row) => row.rentPaid);
   const equitySeries = results.rows.map((row) => row.equity);
+  const renterSavingsSeries = results.rows.map((row) => row.renterSavings);
 
   if (comparisonChart) {
     comparisonChart.destroy();
   }
 
-  comparisonChart = new Chart(chartCanvas.getContext('2d'), {
+  comparisonChart = new window.Chart(chartCanvas.getContext('2d'), {
     type: 'line',
     data: {
       labels,
@@ -270,6 +310,15 @@ function renderChart(results) {
           data: rentSeries,
           borderColor: '#94a3b8',
           backgroundColor: 'rgba(148, 163, 184, 0.15)',
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Renter savings',
+          data: renterSavingsSeries,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.15)',
           borderWidth: 3,
           tension: 0.3,
           fill: true
@@ -314,4 +363,8 @@ function renderChart(results) {
       }
     }
   });
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { runProjection };
 }
